@@ -11,6 +11,10 @@ const http = require('http');
 const ngrok = require('../src/get_public_url');
 const ViberBot = require('viber-bot').Bot;
 const BotEvents = require('viber-bot').Events;
+const TextMessage = require('viber-bot').Message.Text;
+
+const qs = require('qs');
+const fetch = require("node-fetch");
 
 require('dotenv').config();
 
@@ -34,9 +38,39 @@ const bot = new ViberBot({
 bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
   // Echo's back the message to the client. Your bot logic should sit here.
   console.log('New message: ', message);
-  response.send(message);
+  console.log('From: ', response.userProfile.id, );
+  console.log('Name: ', response.userProfile.name);
+  const usersArr = JSON.parse(process.env.USERS_STR).users;
+  console.log('Users: ', usersArr);
+  if(usersArr.some((userObj) => userObj.viber_id === response.userProfile.id)) {
+    const orderNumber = strToOrderNumber(message.text.trim());
+    if(orderNumber) {
+      if(!process.env.ST) {
+        console.error('Env variable error');
+        response.send(new TextMessage('Ошибка сервера'));
+        return;
+      }
+      getParsedOrderData(orderNumber, process.env.ST)
+          .then((orderObj) => {
+            if(orderObj) {
+              const text = Object.keys(orderObj).reduce((acc, key) => {
+                acc = `${acc} ${key}: ${orderObj[key]}\n`;
+                return acc;
+              }, '');
+              // console.log('Text: ', text);
+              response.send(new TextMessage(text));
+            } else {
+              response.send(new TextMessage('Ошибка сервера. Нет данных о заказе'));
+            }
+          })
+    } else {
+      response.send(new TextMessage('Неверный номер'));
+    }
+  } else {
+    const message = new TextMessage('No! No! Nooo!');
+    response.send(message);
+  }
 });
-
 
 const server = ngrok.getPublicUrl().then(publicUrl => {
   console.log('Set the new webhook to"', publicUrl);
@@ -113,3 +147,142 @@ function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
+
+
+const strToOrderNumber = (str) => {
+  try {
+    const orderNumber = parseInt(str.replace(/ /g, ''));
+    if(orderNumber) {
+      console.log('Correct request. Order number: ', orderNumber);
+      return orderNumber;
+    } else {
+      console.log('Incorrect request. No success.');
+      return false;
+    }
+  } catch(e) {
+    console.log('Incorrect request. No success.');
+    return false;
+  }
+}
+
+const getParsedOrderData = async (orderNumber, st) => {
+  if(!orderNumber) return false;
+  const result = await getRawOrderData(orderNumber, st);
+  console.log(`[${new Date().toLocaleString()}] orderDataFromDb: `, result);
+  let orderObj = {};
+  if(("data" in result) && result.data) {
+    try {
+      orderObj = parseOrderDataString(result.data);
+    } catch (e) {
+      return false;
+    }
+  } else {
+    return false;
+  }
+  return orderObj;
+};
+
+const getRawOrderData = async(orderNumber, st) => {
+
+  const queue = qs.stringify({
+    "st": st,
+    "orderNumber": orderNumber
+  });
+
+  const url = `${process.env.ORDERSWORKER_ADDR}getOrderData?${queue}`;
+
+  try {
+    return await fetch(url)
+        .then((response) => {
+          // console.log("Order data response: ", response);
+          return response.text();
+        })
+        .then((data) => {
+          // console.log("Order data response text: ", data);
+          return JSON.parse(data);
+        });
+  } catch (e) {
+    console.log(`[${new Date().toLocaleString()}] getOrderData error: `, e);
+    return {};
+  }
+
+};
+
+const parseOrderDataString = (str) => {
+  // const orderDataArray = str.split(';');
+  const orderDataArray = [];
+  let fieldStr = '';
+  let isQuote = false;
+  for(let i = 0; i < str.length; i++) {
+    if(str[i] === "\"" && isQuote) {
+      isQuote = false;
+      // orderDataArray.push(fieldStr);
+      // fieldStr = '';
+      continue;
+    }
+    if(str[i] === "\"" && !isQuote) {
+      isQuote = true;
+      continue;
+    }
+    if(str[i] === ";" && isQuote) {
+      fieldStr = fieldStr + ";";
+      continue;
+    }
+    if(str[i] === ";" && !isQuote) {
+      orderDataArray.push(fieldStr);
+      fieldStr = '';
+      continue;
+    }
+    fieldStr = fieldStr + str[i];
+  }
+  if(fieldStr.length) {
+    orderDataArray.push(fieldStr);
+  }
+  // console.log('orderDataArray: ', orderDataArray);
+  // let orderDataKeys = [
+  //   'order',
+  //   'createDate',
+  //   'releaseDate',
+  //   'product',
+  //   'workType',
+  //   'count',
+  //   'material',
+  //   'description',
+  //   'additionalInfo',
+  //   'manager',
+  //   'office',
+  //   'client',
+  //   'approveDate'
+  // ];
+  const orderDataKeys = [
+    'Номер заказа',
+    'Заведён',
+    'Отгрузка',
+    'Название',
+    'Вид работ',
+    'Тираж',
+    'Материал',
+    'Описание',
+    'Доп. инфо',
+    'Менеджер',
+    'Филиал',
+    'Доставка',
+    'Заказчик',
+    'Дата согласования',
+    'Стоимость',
+    'Тип-1',
+    'Тип-2',
+    'Готовность',
+    'Инфо по доставке',
+    'Нечто',
+    'Способ отправки'
+  ];
+  const orderDataObj = orderDataKeys.reduce((acc, key, index) => {
+    if(orderDataArray[index] !== undefined) {
+      acc[key] = orderDataArray[index][0] === "\"" ? orderDataArray[index].slice(1, orderDataArray[index].length - 1) : orderDataArray[index];
+    }
+    return acc;
+  }, {});
+  // console.log('Order data obj: ', orderDataObj);
+  return orderDataObj;
+};
