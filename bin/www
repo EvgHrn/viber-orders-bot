@@ -83,13 +83,13 @@ const serverSSLOptions = {
   ca: fs.readFileSync(caPathStr),
 };
 
-const server = https.createServer(serverSSLOptions, bot.middleware()).listen(port, () => bot.setWebhook(process.env.PUBLIC_URL));
+const server = https.createServer(serverSSLOptions, bot.middleware()).listen(port, () => bot.setWebhook(`${process.env.PUBLIC_URL}:${port}`));
 
 /**
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
+// server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
 
