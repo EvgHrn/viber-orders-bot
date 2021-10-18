@@ -6,9 +6,10 @@
 
 const app = require('../app');
 const debug = require('debug')('orders-bot:server');
-const http = require('http');
+const https = require('https');
+const fs = require('fs');
 
-const ngrok = require('../src/get_public_url');
+// const ngrok = require('../src/get_public_url');
 const ViberBot = require('viber-bot').Bot;
 const BotEvents = require('viber-bot').Events;
 const TextMessage = require('viber-bot').Message.Text;
@@ -72,21 +73,25 @@ bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
   }
 });
 
-const server = ngrok.getPublicUrl().then(publicUrl => {
-  console.log('Set the new webhook to"', publicUrl);
-  http.createServer(bot.middleware()).listen(port, () => bot.setWebhook(publicUrl));
-}).catch(error => {
-  console.log('Can not connect to ngrok server. Is it running?');
-  console.error(error);
-});
+const keyPathStr = `${process.env.SSL_KEY_PATH_FILE}`;
+const certPathStr = `${process.env.SSL_CERT_PATH_FILE}`;
+const caPathStr = `${process.env.SSL_CA_PATH_FILE}`;
+console.log("SSL options: ", keyPathStr, certPathStr, caPathStr);
+const serverSSLOptions = {
+  key: fs.readFileSync(keyPathStr),
+  cert: fs.readFileSync(certPathStr),
+  ca: fs.readFileSync(caPathStr),
+};
+
+const server = https.createServer(serverSSLOptions, bot.middleware()).listen(port, () => bot.setWebhook(process.env.PUBLIC_URL));
 
 /**
  * Listen on provided port, on all network interfaces.
  */
 
-// server.listen(port);
-// server.on('error', onError);
-// server.on('listening', onListening);
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
 
 /**
  * Normalize a port into a number, string, or false.
