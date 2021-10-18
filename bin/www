@@ -42,7 +42,7 @@ bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
   console.log('From: ', response.userProfile.id, );
   console.log('Name: ', response.userProfile.name);
   const usersArr = JSON.parse(process.env.USERS_STR).users;
-  console.log('Users: ', usersArr);
+  // console.log('Users: ', usersArr);
   if(usersArr.some((userObj) => userObj.viber_id === response.userProfile.id)) {
     const orderNumber = strToOrderNumber(message.text.trim());
     if(orderNumber) {
@@ -55,7 +55,7 @@ bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
           .then((orderObj) => {
             if(orderObj) {
               const text = Object.keys(orderObj).reduce((acc, key) => {
-                acc = `${acc} ${key}: ${orderObj[key]}\n`;
+                acc = `${acc} ${key}: ${orderObj[key].trim()}\n`;
                 return acc;
               }, '');
               // console.log('Text: ', text);
@@ -68,7 +68,8 @@ bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
       response.send(new TextMessage('Неверный номер'));
     }
   } else {
-    const message = new TextMessage('No! No! Nooo!');
+    const message = new TextMessage('Нет доступа');
+    console.log('Unknown user: ', response.userProfile);
     response.send(message);
   }
 });
