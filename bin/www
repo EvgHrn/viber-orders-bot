@@ -41,6 +41,7 @@ bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
   console.log('New message: ', message);
   console.log('From: ', response.userProfile.id, );
   console.log('Name: ', response.userProfile.name);
+  bot.sendMessage(process.env.ADMIN_ID, new TextMessage(`New message from user: ${response.userProfile.id} ${response.userProfile.name}: ${message}`));
   const usersArr = JSON.parse(process.env.USERS_STR).users;
   // console.log('Users: ', usersArr);
   if(usersArr.some((userObj) => userObj.viber_id === response.userProfile.id)) {
@@ -70,6 +71,10 @@ bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
   } else {
     const message = new TextMessage('Нет доступа');
     console.log('Unknown user: ', response.userProfile);
+    bot.getUserDetails(response.userProfile)
+        .then(userDetails  => {
+          bot.sendMessage(process.env.ADMIN_ID, new TextMessage(`Unknown user: ${response.userProfile.id} ${response.userProfile.name}`));
+        })
     response.send(message);
   }
 });
