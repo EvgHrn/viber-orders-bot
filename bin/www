@@ -54,15 +54,29 @@ bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
       }
       getParsedOrderData(orderNumber, process.env.ST)
           .then((orderObj) => {
-            if(orderObj) {
-              const text = Object.keys(orderObj).reduce((acc, key) => {
-                acc = `${acc} ${key}: ${orderObj[key].trim()}\n`;
+            if(orderObj && orderObj.data) {
+              const text = Object.keys(orderObj.data).reduce((acc, key) => {
+                acc = `${acc} ${key}: ${orderObj.data[key].trim()}\n`;
                 return acc;
               }, '');
               // console.log('Text: ', text);
               response.send(new TextMessage(text));
             } else {
               response.send(new TextMessage('Ошибка сервера. Нет данных о заказе'));
+            }
+            if(orderObj && orderObj.status) {
+              const text = Object.keys(orderObj.status).reduce((acc, key) => {
+                if(orderObj.status.isDone) {
+                  acc = `${acc} ${key.slice(1, -1)}: ${orderObj.status[key].doneDate.toLocaleString()} ${orderObj.status[key].userAccessStr}\n`;
+                } else {
+                  acc = `${acc} ${key.slice(1, -1)}: -\n`;
+                }
+                return acc;
+              }, '');
+              // console.log('Text: ', text);
+              response.send(new TextMessage(text));
+            } else {
+              response.send(new TextMessage('Ошибка сервера. Нет данных о статусе'));
             }
           })
     } else {
@@ -183,7 +197,10 @@ const getParsedOrderData = async (orderNumber, st) => {
   let orderObj = {};
   if(("data" in result) && result.data) {
     try {
-      orderObj = parseOrderDataString(result.data);
+      orderObj.data = parseOrderDataString(result.data);
+      if(result.status) {
+        orderObj.status = parseOrderSitesString(result.status);
+      }
     } catch (e) {
       return false;
     }
@@ -297,3 +314,26 @@ const parseOrderDataString = (str) => {
   // console.log('Order data obj: ', orderDataObj);
   return orderDataObj;
 };
+
+const parseOrderSitesString = (str) => {
+  const linesArr= str.trim().split(/\r?\n/);
+  const obj = linesArr.reduce((acc, statusStr) => {
+    console.log('status string: ', statusStr);
+    const fieldsArr = statusStr.split(";");
+    console.log('fields: ', fieldsArr);
+    const key = fieldsArr[0];
+    console.log('key: ', key);
+    acc[key] = {
+      isDone: !!parseInt(fieldsArr[1])
+    }
+    if(fieldsArr[2].length) {
+      acc[key].doneDate = parse(fieldsArr[2], 'd.M.yyyy H:mm:ss', new Date());
+      acc[key].userAccessStr = fieldsArr[3].slice(1, -1);
+    }
+    return acc;
+  }, {});
+
+  console.log('parse order sites result: ', obj);
+
+  return obj;
+}
