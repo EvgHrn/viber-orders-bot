@@ -58,7 +58,7 @@ bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
           .then((orderObj) => {
             if(orderObj && orderObj.data) {
               const text = Object.keys(orderObj.data).reduce((acc, key) => {
-                acc = `${acc} ${key}: ${orderObj.data[key].trim()}\n`;
+                acc = `${acc} *${key}*: ${orderObj.data[key].trim()}\n`;
                 return acc;
               }, '');
               // console.log('Text: ', text);
