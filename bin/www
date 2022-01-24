@@ -69,7 +69,7 @@ bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
             if(orderObj && orderObj.status) {
               const text = Object.keys(orderObj.status).reduce((acc, key) => {
                 if(orderObj.status[key].isDone) {
-                  acc = `${acc} ${key.slice(1, -1)}: ${orderObj.status[key].doneDate.toLocaleString()} ${orderObj.status[key].userAccessStr}\n`;
+                  acc = `${acc} ${key.slice(1, -1)}: ${orderObj.status[key].doneDate.toLocaleString('ru')} ${orderObj.status[key].userAccessStr}\n`;
                 } else {
                   acc = `${acc} ${key.slice(1, -1)}: -\n`;
                 }
