@@ -38,7 +38,8 @@ const bot = new ViberBot({
 
 bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
   // Echo's back the message to the client. Your bot logic should sit here.
-  console.log('New message: ', message);
+  console.log('----------------------------------------------------------------');
+  console.log('New message: ', message.text);
   console.log('From: ', response.userProfile.id, );
   console.log('Name: ', response.userProfile.name);
   bot.sendMessage({id: process.env.ADMIN_ID}, new TextMessage(`New message from user: ${response.userProfile.id} ${response.userProfile.name}: ${message.text}`));
@@ -198,7 +199,7 @@ const getParsedOrderData = async (orderNumber, st) => {
   if(("data" in result) && result.data) {
     try {
       orderObj.data = parseOrderDataString(result.data);
-      if(result.status) {
+      if(("status" in result) && result.status) {
         orderObj.status = parseOrderSitesString(result.status);
       }
     } catch (e) {
@@ -207,6 +208,7 @@ const getParsedOrderData = async (orderNumber, st) => {
   } else {
     return false;
   }
+  console.log('parsed order obj: ', orderObj);
   return orderObj;
 };
 
