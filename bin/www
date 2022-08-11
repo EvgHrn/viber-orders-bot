@@ -239,8 +239,10 @@ const getRawOrderData = async(orderNumber, st) => {
 
 };
 
-const parseOrderDataString = (str) => {
+const parseOrderDataString = (orderDto) => {
   // const orderDataArray = str.split(';');
+  if(!orderDto || !('dataString' in orderDto) || !orderDto.dataString) return null;
+  const str = orderDto.dataString;
   const orderDataArray = [];
   let fieldStr = '';
   let isQuote = false;
@@ -269,22 +271,6 @@ const parseOrderDataString = (str) => {
   if(fieldStr.length) {
     orderDataArray.push(fieldStr);
   }
-  // console.log('orderDataArray: ', orderDataArray);
-  // let orderDataKeys = [
-  //   'order',
-  //   'createDate',
-  //   'releaseDate',
-  //   'product',
-  //   'workType',
-  //   'count',
-  //   'material',
-  //   'description',
-  //   'additionalInfo',
-  //   'manager',
-  //   'office',
-  //   'client',
-  //   'approveDate'
-  // ];
   const orderDataKeys = [
     'Номер заказа',
     'Заведён',
@@ -306,7 +292,8 @@ const parseOrderDataString = (str) => {
     'Готовность',
     'Инфо по доставке',
     'Нечто',
-    'Способ отправки'
+    'Способ отправки',
+    'Согласовано'
   ];
   const orderDataObj = orderDataKeys.reduce((acc, key, index) => {
     if(orderDataArray[index] !== undefined) {
@@ -315,6 +302,15 @@ const parseOrderDataString = (str) => {
     return acc;
   }, {});
   // console.log('Order data obj: ', orderDataObj);
+  if('Согласовано' in orderDataObj) {
+    orderDataObj['Согласовано'] = orderDataObj['Согласовано'].includes('-') ? 'Да' : 'Нет';
+  }
+  if('Готовность' in orderDataObj) {
+    orderDataObj['Готовность'] = orderDataObj['Готовность'].includes('0') ? 'Нет' : 'Да';
+  }
+  orderDataObj.modifiedAt = orderDto.modifiedAt;
+  orderDataObj.createdAt = orderDto.createdAt;
+  console.log(`[utils-order] parse order ${orderDataObj['Номер заказа']} result: `, orderDataObj);
   return orderDataObj;
 };
 
