@@ -58,7 +58,7 @@ bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
           .then((orderObj) => {
             if(orderObj && orderObj.data) {
               const text = Object.keys(orderObj.data).reduce((acc, key) => {
-                acc = `${acc} *${key}*: ${orderObj.data[key].trim()}\n`;
+                acc = `${acc} *${key}* :  ${orderObj.data[key].trim()}\n`;
                 return acc;
               }, '');
               // console.log('Text: ', text);
@@ -69,9 +69,9 @@ bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
             if(orderObj && orderObj.status) {
               const text = Object.keys(orderObj.status).reduce((acc, key) => {
                 if(orderObj.status[key].isDone) {
-                  acc = `${acc} *${key.slice(1, -1)}*: ${orderObj.status[key].doneDate.toLocaleString('ru')} ${orderObj.status[key].userAccessStr}\n`;
+                  acc = `${acc} *${key.slice(1, -1)}* :  ${orderObj.status[key].doneDate.toLocaleString('ru')} ${orderObj.status[key].userAccessStr}\n`;
                 } else {
-                  acc = `${acc} ${key.slice(1, -1)}: -\n`;
+                  acc = `${acc} ${key.slice(1, -1)} :  -\n`;
                 }
                 return acc;
               }, '');
@@ -199,7 +199,7 @@ const getParsedOrderData = async (orderNumber, st) => {
   let orderObj = {};
   if(("data" in result) && result.data) {
     try {
-      orderObj.data = parseOrderDataString(result.data);
+      orderObj.data = parseOrderDataString(result.data.dataString);
       if(("status" in result) && result.status) {
         orderObj.status = parseOrderSitesString(result.status);
       }
@@ -220,7 +220,7 @@ const getRawOrderData = async(orderNumber, st) => {
     "orderNumber": orderNumber
   });
 
-  const url = `${process.env.ORDERSWORKER_ADDR}getOrderData?${queue}`;
+  const url = `${process.env.ORDERSWORKER_ADDR}getRawOrderDataAndStatusFromFtp?${queue}`;
 
   try {
     return await fetch(url)
