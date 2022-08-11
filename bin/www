@@ -199,7 +199,7 @@ const getParsedOrderData = async (orderNumber, st) => {
   let orderObj = {};
   if(("data" in result) && result.data) {
     try {
-      orderObj.data = parseOrderDataString(result.data.dataString);
+      orderObj.data = parseOrderDataString(result.data);
       if(("status" in result) && result.status) {
         orderObj.status = parseOrderSitesString(result.status);
       }
