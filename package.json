@@ -17,5 +17,8 @@
     "node-fetch": "^2.6.0",
     "qs": "^6.9.3",
     "viber-bot": "^1.0.18"
+  },
+  "devDependencies": {
+    "eslint": "^8.32.0"
   }
 }
