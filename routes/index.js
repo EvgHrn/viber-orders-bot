@@ -4,6 +4,8 @@ const router = express.Router();
 const {bot} = require('../src/utils/bot');
 const TextMessage = require('viber-bot').Message.Text;
 
+require('dotenv').config();
+
 /* GET home page. */
 router.post('/sendNonstandardOrder', async(req, res, next) => {
 

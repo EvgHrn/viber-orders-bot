@@ -2,6 +2,10 @@ const ViberBot = require('viber-bot').Bot;
 const BotEvents = require('viber-bot').Events;
 const TextMessage = require('viber-bot').Message.Text;
 const {strToOrderNumber, getParsedOrderData} = require('./utils');
+require('dotenv').config();
+
+console.log(`${new Date().toLocaleString('ru')} [bot] authToken: `, process.env.TOKEN);
+console.log(`${new Date().toLocaleString('ru')} [bot] name: `, process.env.NAME);
 
 const bot = new ViberBot({
     authToken: process.env.TOKEN,

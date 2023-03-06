@@ -21,7 +21,7 @@ const serverSSLOptions = {
 };
 
 const server = https.createServer(serverSSLOptions, bot.middleware()).listen(port, () => bot.setWebhook(`${process.env.PUBLIC_URL}:${port}`));
-console.log(`${new Date().toLocaleString('ru')} Server created: `, server);
+//console.log(`${new Date().toLocaleString('ru')} Server created: `, server);
 
 /**
  * Listen on provided port, on all network interfaces.
