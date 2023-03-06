@@ -11,7 +11,7 @@ router.post('/sendNonstandardOrder', async(req, res, next) => {
 
   console.log(`${new Date().toLocaleString('ru')} Parsed order from orders watchers:`, parsedOrder);
 
-  if(parsedOrder && parsedOrder["Название"].toLowerCase() === "нестандартный заказ") {
+  if(parsedOrder && parsedOrder["Название"].toLowerCase().includes("нестандартный заказ")) {
     const usersArr = JSON.parse(process.env.USERS_NONSTANDARD_STR).users;
     for(let i = 0; i < usersArr.length; i++) {
       bot.sendMessage({id: usersArr[i].viber_id}, new TextMessage(`Новый нестандартный заказ: ${parsedOrder['Номер заказа']} ${parsedOrder['Описание']}`));
