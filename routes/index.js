@@ -9,14 +9,17 @@ require('dotenv').config();
 /* GET home page. */
 router.post('/sendNonstandardOrder', async(req, res, next) => {
 
+  console.log(`${new Date().toLocaleString('ru')} Got NonstandardOrder request with body:`, req.body);
+
   const parsedOrder = parseOrderDataString(req.body.order.dataString);
 
-  console.log(`${new Date().toLocaleString('ru')} Parsed order from orders watchers:`, parsedOrder);
+  console.log(`${new Date().toLocaleString('ru')} Parsed order:`, parsedOrder);
 
   if(parsedOrder && parsedOrder["Название"].toLowerCase().includes("нестандартный заказ")) {
     const usersArr = JSON.parse(process.env.USERS_NONSTANDARD_STR).users;
     for(let i = 0; i < usersArr.length; i++) {
-      bot.sendMessage({id: usersArr[i].viber_id}, new TextMessage(`Новый нестандартный заказ: ${parsedOrder['Номер заказа']} ${parsedOrder['Описание']}`));
+      console.log(`${new Date().toLocaleString('ru')} Gonna send nonstandard order to:`, usersArr[i]);
+      bot.sendMessage({id: usersArr[i].viber_id}, new TextMessage(`Новый нестандартный заказ: ${parsedOrder['Номер заказа']} \n ${parsedOrder['Название']} \n ${parsedOrder['Описание']}`));
     }
   }
 
