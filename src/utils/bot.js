@@ -62,7 +62,7 @@ bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
         }
     } else {
         const message = new TextMessage('Нет доступа');
-        console.log('Unknown user: ', response.userProfile);
+        console.log(`${new Date().toLocaleString('ru')} Unknown user: `, response.userProfile);
         bot.getUserDetails(response.userProfile)
             .then(userDetails  => {
                 bot.sendMessage({id: process.env.ADMIN_ID}, new TextMessage(`Unknown user: ${response.userProfile.id} ${response.userProfile.name}`));
